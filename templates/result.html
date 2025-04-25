@@ -1,0 +1,268 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="result-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-clipboard-check text-primary me-3" style="font-size: 2rem;"></i>
+            <div>
+                <h2 class="mb-0">Attendance Results</h2>
+                <p class="text-muted mb-0">{{ class_name|default('Class') }} - {{ date|default('Today') }}</p>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            <a href="{{ url_for('results_file', filename=csv_filename) }}" class="btn btn-success">
+                <i class="fas fa-download me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Attendance Summary Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-primary me-2"></i>Attendance Summary
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <!-- Attendance Gauge -->
+                        <div class="position-relative d-inline-block">
+                            <canvas id="attendanceGauge" width="200" height="200"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                <h3 class="mb-0">{{ present_count }}</h3>
+                                <p class="small text-muted mb-0">Present</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="mb-0">{{ present_count }}/{{ total_count }}</h4>
+                            <p class="small text-muted">Students Present</p>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="mb-0">{{ "%.1f"|format(100 * present_count / total_count) if total_count > 0 else 0 }}%</h4>
+                            <p class="small text-muted">Attendance Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Processed Image Card -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-image text-primary me-2"></i>Processed Attendance Sheet
+                    </h5>
+                </div>
+                <div class="card-body p-0 text-center">
+                    <img src="{{ url_for('results_file', filename=visualization_path) }}" class="img-fluid" alt="Processed Attendance Sheet" style="max-height: 400px; width: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <!-- Student Attendance Table Card -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>Student Attendance
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Roll Number</th>
+                                    <th>Status</th>
+                                    <th>Match Quality</th>
+                                    <th>Detection Info</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in attendance_data %}
+                                <tr {% if item.Present == 'No' %}class="table-secondary"{% endif %}>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.Present == 'Yes' %}
+                                            <div class="text-success me-2"><i class="fas fa-check-circle"></i></div>
+                                            {% else %}
+                                            <div class="text-secondary me-2"><i class="fas fa-times-circle"></i></div>
+                                            {% endif %}
+                                            <div>{{ item.Name }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ item['Roll Number'] }}</td>
+                                    <td>
+                                        {% if item.Present == 'Yes' %}
+                                        <span class="badge bg-success">Present</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.Present == 'Yes' %}
+                                            <div class="progress" style="height: 8px;">
+                                                {% set confidence = item.Confidence|float %}
+                                                {% if confidence > 0.8 %}
+                                                    {% set color = "bg-success" %}
+                                                {% elif confidence > 0.6 %}
+                                                    {% set color = "bg-info" %}
+                                                {% else %}
+                                                    {% set color = "bg-warning" %}
+                                                {% endif %}
+                                                <div class="progress-bar {{ color }}" role="progressbar" style="width: {{ confidence * 100 }}%" aria-valuenow="{{ confidence * 100 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <small class="text-muted">{{ "%.0f"|format(confidence * 100) }}% match</small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.Present == 'Yes' %}
+                                        <span class="badge bg-light text-dark">{{ item['Match Type'] }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if unmatched_data and unmatched_data|length > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning bg-opacity-10 text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>Unmatched Text
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Detected Text</th>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in unmatched_data %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ item.Text }}</td>
+                                    <td>
+                                        {% if item.Type == 'Name' %}
+                                        <span class="badge bg-success">Name</span>
+                                        {% elif item.Type == 'Roll Number' %}
+                                        <span class="badge bg-primary">Roll Number</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ item.Type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-user-plus me-1"></i>Add to Database
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> The text above was detected but could not be matched to any student in the database.
+                        Consider updating the student database or checking the quality of the attendance sheet.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="d-inline-block">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configure and draw the attendance gauge
+    const ctx = document.getElementById('attendanceGauge').getContext('2d');
+    
+    // Calculate percentage
+    const presentCount = {{ present_count }};
+    const totalCount = {{ total_count }};
+    const percentage = totalCount > 0 ? (presentCount / totalCount) : 0;
+    
+    // Determine color based on percentage
+    let color = '#4ade80'; // Default success color
+    if (percentage < 0.6) {
+        color = '#f43f5e'; // Danger color for low attendance
+    } else if (percentage < 0.8) {
+        color = '#fb923c'; // Warning color for medium attendance
+    }
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [presentCount, totalCount - presentCount],
+                backgroundColor: [
+                    color,
+                    '#e9ecef'
+                ],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

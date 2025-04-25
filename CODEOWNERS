@@ -1,0 +1,17 @@
+# These owners will be the default owners for everything in the repo
+* @contributor1 @contributor2
+
+# Python files
+*.py @contributor1
+
+# Templates and frontend files
+templates/ @contributor2
+*.html @contributor2
+*.css @contributor2
+*.js @contributor2
+
+# Model files
+TJModel/ @contributor1
+
+# Documentation
+*.md @contributor1 @contributor2 

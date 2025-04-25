@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Attendance API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 1000px;
+            margin-top: 50px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Attendance API with CORS</h1>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Upload Attendance Sheet</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">Select image file:</label>
+                    <input class="form-control" type="file" id="fileInput" accept=".jpg,.jpeg,.png">
+                </div>
+                <button id="uploadBtn" class="btn btn-primary">Upload and Process</button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Get Student List</h3>
+            </div>
+            <div class="card-body">
+                <button id="getStudentsBtn" class="btn btn-secondary">Load Students</button>
+            </div>
+        </div>
+
+        <div id="result" style="display: none;">
+            <h3>API Response:</h3>
+            <pre id="responseJson"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Set the API server URL
+        const API_URL = 'http://localhost:5000';
+
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading state
+            this.disabled = true;
+            this.innerText = 'Processing...';
+
+            fetch(`${API_URL}/upload`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayResult(data);
+                this.disabled = false;
+                this.innerText = 'Upload and Process';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing the request');
+                this.disabled = false;
+                this.innerText = 'Upload and Process';
+            });
+        });
+
+        document.getElementById('getStudentsBtn').addEventListener('click', function() {
+            // Show loading state
+            this.disabled = true;
+            this.innerText = 'Loading...';
+
+            fetch(`${API_URL}/api/students`)
+            .then(response => response.json())
+            .then(data => {
+                displayResult(data);
+                this.disabled = false;
+                this.innerText = 'Load Students';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error fetching students');
+                this.disabled = false;
+                this.innerText = 'Load Students';
+            });
+        });
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const responseJson = document.getElementById('responseJson');
+            
+            responseJson.innerText = JSON.stringify(data, null, 2);
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,43 @@
+# This requirements.txt is intended for Python 3.10
+
+# Numerical computing – use numpy 1.x to ensure compatibility with other packages
+numpy<2,>=1.26.4
+
+# Deep learning framework and vision models
+torch==1.13.1
+torchvision==0.14.1
+
+# OpenCV for image processing
+opencv-python>=4.5.3,<4.5.4.62
+
+# CRAFT text detection package
+craft-text-detector==0.4.3
+
+# Transformers library for loading models like TrOCR (for OCR)
+transformers>=4.29.2
+
+# Hugging Face Hub to download model weights
+huggingface_hub>=0.14.1
+
+# Image processing and utilities
+Pillow>=8.4.0
+scikit-image>=0.18.3
+scipy>=1.7.1
+
+# Visualization (optional)
+matplotlib>=3.5.0
+
+# (Optional) pybind11 for building C++ extensions if needed
+pybind11>=2.12
+
+# (Optional) pandas if your pipeline involves data manipulation (e.g. saving crop coordinates)
+pandas>=1.3.5
+
+# Web Application
+Flask==2.3.3
+Werkzeug==2.3.7
+Flask-WTF==1.1.1
+python-dotenv==1.0.0
+
+# CORS support for API access
+Flask-CORS==4.0.0 

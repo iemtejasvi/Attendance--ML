@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="result-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-chart-line text-primary me-3" style="font-size: 2rem;"></i>
+            <h2 class="mb-0">Teacher Dashboard</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Home
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats Cards Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="p-3 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="background-color: rgba(67, 97, 238, 0.1); width: 80px; height: 80px;">
+                        <i class="fas fa-users text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-1">{{ students_count|default(0) }}</h3>
+                    <p class="text-muted small text-uppercase mb-0">Total Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="p-3 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="background-color: rgba(67, 97, 238, 0.1); width: 80px; height: 80px;">
+                        <i class="fas fa-file-alt text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-1">{{ attendance_records|default(0) }}</h3>
+                    <p class="text-muted small text-uppercase mb-0">Total Sheets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="p-3 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="background-color: rgba(67, 97, 238, 0.1); width: 80px; height: 80px;">
+                        <i class="fas fa-percentage text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-1">{{ avg_attendance_rate|default('0') }}%</h3>
+                    <p class="text-muted small text-uppercase mb-0">Avg. Attendance</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="p-3 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="background-color: rgba(67, 97, 238, 0.1); width: 80px; height: 80px;">
+                        <i class="fas fa-calendar-check text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-1">{{ last_processed|default('N/A') }}</h3>
+                    <p class="text-muted small text-uppercase mb-0">Last Processed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance Trends Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line text-primary me-2"></i>Attendance Trends
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active" id="weeklyBtn">Weekly</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="monthlyBtn">Monthly</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceTrendsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student-wise Attendance and Recent Records -->
+    <div class="row">
+        <!-- Student-wise Attendance -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-check text-primary me-2"></i>Student-wise Attendance
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Roll Number</th>
+                                    <th>Attendance Rate</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in student_attendance %}
+                                <tr>
+                                    <td>{{ student.name }}</td>
+                                    <td>{{ student.roll_number }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                {% if student.attendance_rate >= 75 %}
+                                                    {% set color = "bg-success" %}
+                                                {% elif student.attendance_rate >= 60 %}
+                                                    {% set color = "bg-warning" %}
+                                                {% else %}
+                                                    {% set color = "bg-danger" %}
+                                                {% endif %}
+                                                <div class="progress-bar {{ color }}" role="progressbar" style="width: {{ student.attendance_rate }}%" aria-valuenow="{{ student.attendance_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span>{{ student.attendance_rate }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if student.attendance_rate >= 75 %}
+                                            <span class="badge bg-success">Good</span>
+                                        {% elif student.attendance_rate >= 60 %}
+                                            <span class="badge bg-warning">Average</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Poor</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Attendance Records -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>Recent Attendance Records
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if recent_records %}
+                            {% for record in recent_records %}
+                                <div class="list-group-item px-3 py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ record.class_name }}</h6>
+                                        <p class="mb-0 small text-muted">{{ record.date }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="mb-1">
+                                            <span class="badge bg-primary">{{ record.present_count }}/{{ record.total_count }} present</span>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('view_attendance', id=record.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                            <a href="{{ url_for('results_file', filename=record.csv_filename) }}" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-download me-1"></i>CSV
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item px-3 py-3 text-center">
+                                <p class="mb-0 text-muted">No attendance records found</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3 text-center">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-list me-1"></i>View All Records
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendance Trends Chart
+    const trendsCtx = document.getElementById('attendanceTrendsChart').getContext('2d');
+    
+    // Sample data - in a real application, this would come from the backend
+    const weeklyLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const weeklyData = [85, 72, 78, 75, 82, 70, 65];
+    
+    const monthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyData = [65, 75, 70, 80, 75, 68, 72, 70, 78, 82, 85, 79];
+    
+    // Create the chart
+    const trendsChart = new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: weeklyLabels,
+            datasets: [{
+                label: 'Attendance Rate (%)',
+                data: weeklyData,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#4361ee',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + '% attendance';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Toggle between weekly and monthly views
+    document.getElementById('weeklyBtn').addEventListener('click', function() {
+        document.getElementById('weeklyBtn').classList.add('active');
+        document.getElementById('monthlyBtn').classList.remove('active');
+        
+        trendsChart.data.labels = weeklyLabels;
+        trendsChart.data.datasets[0].data = weeklyData;
+        trendsChart.update();
+    });
+    
+    document.getElementById('monthlyBtn').addEventListener('click', function() {
+        document.getElementById('monthlyBtn').classList.add('active');
+        document.getElementById('weeklyBtn').classList.remove('active');
+        
+        trendsChart.data.labels = monthlyLabels;
+        trendsChart.data.datasets[0].data = monthlyData;
+        trendsChart.update();
+    });
+});
+</script>
+{% endblock %} 
