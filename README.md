@@ -82,24 +82,24 @@ A modern attendance management system that uses AI to detect and process handwri
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Flask  
-- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5  
-- **Database**: SQLite  
+- **Backend**: Flask.  
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5.  
+- **Database**: SQLite.  
 - **AI Models**:  
-  - Text Detection: CRAFT (Character Region Awareness for Text Detection)  
-  - OCR: TrOCR (Transformer-based OCR)  
-- **Visualization**: Chart.js  
+  - Text Detection: CRAFT (Character Region Awareness for Text Detection).  
+  - OCR: TrOCR (Transformer-based OCR).  
+- **Visualization**: Chart.js.  
 
 ## 📚 How It Works
 
 1. **Upload**: Teacher uploads a photo of the handwritten attendance sheet  
 2. **Processing**:  
-   - AI detects text regions in the image  
-   - OCR model extracts text from each region  
-   - Smart matching algorithm matches extracted text with student database  
-3. **Results**: System displays processed attendance with visual indicators  
-4. **Storage**: Attendance records are saved to the database for future reference  
-5. **Dashboard**: Teachers can view attendance statistics and trends  
+   - AI detects text regions in the image.  
+   - OCR model extracts text from each region.  
+   - Smart matching algorithm matches extracted text with student database.  
+3. **Results**: System displays processed attendance with visual indicators.  
+4. **Storage**: Attendance records are saved to the database for future reference.  
+5. **Dashboard**: Teachers can view attendance statistics and trends.  
 
 ## 🧩 Project Structure
 
